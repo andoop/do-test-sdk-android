@@ -1,6 +1,10 @@
 package com.dtmob.android;
 
+import android.content.Context;
+import android.os.AsyncTask;
 import android.os.Environment;
+import android.os.SystemClock;
+import android.view.ViewOutlineProvider;
 
 import java.io.File;
 import java.io.IOException;
@@ -31,38 +35,37 @@ class LgsTool {
     /**
      * 保存log
      */
-    static void save() {
-        File log_file_dir = new File(Environment.getExternalStorageDirectory().getAbsolutePath() +
-                File.separator + "00");
-        if (!log_file_dir.exists()) {
-            try {
-                log_file_dir.mkdirs();
-            } catch (Exception e) {
-                e.printStackTrace();
+    static void save(final Context context) {
+        new AsyncTask<Void,Void,Void>(){
+            @Override
+            protected Void doInBackground(Void... params) {
+                try {
+                    DtDataManager.newInstance().init_Log_File();
+                    ArrayList<String> commandLine = new ArrayList<>();
+                    commandLine.add("logcat");
+                    commandLine.add("-d");//使用该参数可以让logcat获取日志完毕后终止进程
+                    commandLine.add("-v");
+                    commandLine.add("time");
+                    commandLine.add("-f");//如果使用commandLine.add(">");是不会写入文件，必须使用-f的方式
+                    commandLine.add(DtDataManager.newInstance().get_log_file_path());
+                    Runtime.getRuntime().exec(commandLine.toArray(new String[commandLine.size()]));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                //预留log保存时间
+                SystemClock.sleep(1500);
+
+                return null;
             }
-        }
-        File log_file = new File(log_file_dir, "logcat.txt");
-        if (log_file.exists()) {
-            log_file.delete();
-        }
-        try {
-           log_file.createNewFile();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        try {
-            StringBuilder log = new StringBuilder();
-            ArrayList<String> commandLine = new ArrayList<>();
-            commandLine.add("logcat");
-            commandLine.add("-d");//使用该参数可以让logcat获取日志完毕后终止进程
-            commandLine.add("-v");
-            commandLine.add("tag");
-            commandLine.add("-f");//如果使用commandLine.add(">");是不会写入文件，必须使用-f的方式
-            commandLine.add(log_file.getAbsolutePath());
-            Runtime.getRuntime().exec(commandLine.toArray(new String[commandLine.size()]));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+
+            @Override
+            protected void onPostExecute(Void aVoid) {
+
+                DtDataManager.newInstance().do_rep_local_logs(context);
+
+            }
+        }.execute();
+
     }
 
 }

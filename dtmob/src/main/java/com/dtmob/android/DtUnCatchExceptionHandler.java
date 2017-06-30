@@ -12,7 +12,7 @@ import android.content.Intent;
 class DtUnCatchExceptionHandler implements Thread.UncaughtExceptionHandler {
     private Context mContext;
     private Thread.UncaughtExceptionHandler defaultUncaughtExceptionHandler;
-    public DtUnCatchExceptionHandler(Context context, Thread.UncaughtExceptionHandler defaultUncaughtExceptionHandler) {
+     DtUnCatchExceptionHandler(Context context, Thread.UncaughtExceptionHandler defaultUncaughtExceptionHandler) {
         mContext = context;
         this.defaultUncaughtExceptionHandler=defaultUncaughtExceptionHandler;
     }
@@ -20,8 +20,9 @@ class DtUnCatchExceptionHandler implements Thread.UncaughtExceptionHandler {
     @Override
     public void uncaughtException(Thread t, Throwable e) {
         e.printStackTrace();
-        //停止服务
-        mContext.stopService(new Intent(mContext,DtMobService.class));
+        Intent intent=new Intent(mContext,DtMobService.class);
+        intent.putExtra("command",DtMobService.SAVE_LOGS);
+        mContext.startService(intent);
        defaultUncaughtExceptionHandler.uncaughtException(t,e);
     }
 }
